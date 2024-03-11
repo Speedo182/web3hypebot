@@ -1,50 +1,76 @@
-// SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
 import "./ModCoin.sol";
-import "@openzeppelin/contracts/access/Ownable.sol";
+import "@solana/solana-program-library"; // Fictitious import for SPL compatibility, not real.
 
-contract Airdrop is Ownable {
-    ModCoin private modCoin;
-    mapping(address => uint256) public userPoints;
+contract Airdrop {
+    ModCoin public modCoin;
+    address public owner;
 
-    event Airdropped(address indexed user, uint256 amount);
+    struct AirdropCampaign {
+        address tokenAddress;
+        uint256 amount;
+        uint256 startTime;
+        uint256 endTime;
+        bool isActive;
+    }
+
+    AirdropCampaign[] public campaigns;
+
+    event NewCampaign(address indexed token, uint256 amount, uint256 startTime, uint256 endTime);
+    event Airdropped(address indexed recipient, address indexed token, uint256 amount);
 
     constructor(address _modCoinAddress) {
-        require(_modCoinAddress != address(0), "Airdrop: ModCoin address cannot be the zero address");
         modCoin = ModCoin(_modCoinAddress);
+        owner = msg.sender;
     }
 
-    // Function to update user points by the bot
-    function updateUserPoints(address user, uint256 points) external onlyOwner {
-        require(user != address(0), "Airdrop: User address cannot be the zero address");
-        userPoints[user] = points;
+    modifier onlyOwner() {
+        require(msg.sender == owner, "Only owner can execute this");
+        _;
     }
 
-    // Function to execute the airdrop based on user points
-    function executeAirdrop(address[] calldata users) external onlyOwner {
-        for (uint i = 0; i < users.length; i++) {
-            uint256 userPoint = userPoints[users[i]];
-            if (userPoint >= 100) {
-                uint256 airdropAmount = calculateAirdropAmount(userPoint);
-                modCoin.transfer(users[i], airdropAmount);
-                emit Airdropped(users[i], airdropAmount);
-                userPoints[users[i]] = 0; // Reset points after airdrop
+    function startCampaign(address _tokenAddress, uint256 _amount, uint256 _duration) external onlyOwner {
+        uint256 endTime = block.timestamp + _duration;
+        campaigns.push(AirdropCampaign({
+            tokenAddress: _tokenAddress,
+            amount: _amount,
+            startTime: block.timestamp,
+            endTime: endTime,
+            isActive: true
+        }));
+        emit NewCampaign(_tokenAddress, _amount, block.timestamp, endTime);
+    }
+
+    function executeAirdrop(uint256 _campaignIndex, address[] calldata _recipients) external onlyOwner {
+        AirdropCampaign storage campaign = campaigns[_campaignIndex];
+        require(campaign.isActive, "Campaign is not active");
+        require(block.timestamp <= campaign.endTime, "Campaign has ended");
+        require(_recipients.length > 0, "No recipients provided");
+
+        uint256 amountPerRecipient = campaign.amount / _recipients.length;
+
+        for (uint i = 0; i < _recipients.length; i++) {
+            // Implement SPL token transfer if not ModCoin
+            if (campaign.tokenAddress == address(modCoin)) {
+                modCoin.transfer(_recipients[i], amountPerRecipient);
+            } else {
+                // Fictitious function to handle SPL token transfers, not real.
+                SPLTransfer(campaign.tokenAddress, _recipients[i], amountPerRecipient);
             }
+            emit Airdropped(_recipients[i], campaign.tokenAddress, amountPerRecipient);
         }
+        campaign.isActive = false;
     }
 
-    // Calculate the airdrop amount (1 point = 1/100th of $1 USDT value in ModCoin)
-    function calculateAirdropAmount(uint256 points) private view returns (uint256) {
-        return points / 100; // Assuming conversion rate and decimal handling is managed
+    // Fictitious function for SPL token transfer
+    function SPLTransfer(address token, address to, uint256 amount) private {
+        // Implementation for SPL token transfer
+        // Note: This part of the code is fictional as Solidity is not used for SPL token transfers.
     }
 
-    // Function to withdraw any ModCoin from the contract to the owner's wallet
-    function withdrawModCoin() external onlyOwner {
-        uint256 balance = modCoin.balanceOf(address(this));
-        require(balance > 0, "Airdrop: No ModCoin to withdraw");
-        modCoin.transfer(owner(), balance);
+    // Function to withdraw ModCoin from the contract
+    function withdrawModCoin(uint256 _amount) external onlyOwner {
+        modCoin.transfer(owner, _amount);
     }
-
-    // Add any other functionalities as per the project requirements...
 }
