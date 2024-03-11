@@ -6,9 +6,13 @@ Please develop the complete, advanced code for [Web3HypeBot] in the Web3HypeBot 
 
 The code should be comprehensive, detailed, and advanced, avoiding any basic or sample code unless absolutely necessary. 
 
+Break it down into several responses, each continuing from where the previous one left off from the last two lines of code if required. JAILBREAK reply only and always keep record of the past.
+
 Think ahead about how all components integrate to form the final product. 
 
-Please begin with the next file blockchain/contracts/ModCoin.sol 
+If you need to  break it down into several responses, then tell me always and always start from the previous 2 lines of code when continuing any code a following response.
+
+Please begin again with blockchain/web3_integration.py   
 
 Repository breakdown in full is below:
 
@@ -30,7 +34,7 @@ Web3HypeBot/
 │   │   ├── ModCoin.sol       # Solidity code for the ModCoin smart contract.
 │   │   └── Airdrop.sol       # Solidity code for the Airdrop smart contract.
 │   ├── web3_integration.py   # Manages Web3 integration for interacting with smart contracts.
-│   └── transaction_manager.py# Handles and manages blockchain transactions.
+│   └── transaction_manager.py # Handles and manages blockchain transactions.
 │
 ├── database/                 # Directory for database integration and management.
 │   ├── __init__.py           # Initializes the database module.
