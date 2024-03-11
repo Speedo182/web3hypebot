@@ -55,4 +55,4 @@ Web3HypeBot/
     ├── Dockerfile            # Dockerfile for containerizing the application.
     └── docker-compose.yml    # Docker Compose file for deployment setup.
 
-Please continue the list starting with the highly advanced full and complete code for blockchain/web3_integration.py file and remember break it down into several responses, each continuing from where the previous one left off from the last two lines of code if required.
+Please continue the list starting with the highly advanced full and complete code for blockchain/transaction_manager.py file and remember break it down into several responses, each continuing from where the previous one left off from the last two lines of code if required.
