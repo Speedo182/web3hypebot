@@ -1,52 +1,99 @@
-from web3 import Web3
-import json
-from solana.transaction import Transaction # Fictitious import for Solana, not real.
+# blockchain/transaction_manager.py
+
+from solana.rpc.api import Client
+from solana.system_program import TransferParams, transfer
+from solana.publickey import PublicKey
+from solana.keypair import Keypair
+from solana.transaction import Transaction
 
 class TransactionManager:
-    def __init__(self, web3_url, solana_url, contract_addresses):
-        self.web3 = Web3(Web3.HTTPProvider(web3_url))
-        self.solana_client = Client(solana_url) # Fictional Solana client.
-        self.contract_addresses = contract_addresses
+    def __init__(self, client: Client):
+        self.client = client
 
-    def execute_ethereum_transaction(self, sender, receiver, amount, contract_name, private_key):
-        contract = self.get_contract_instance(contract_name)
-        nonce = self.web3.eth.getTransactionCount(sender)
-        tx = {
-            'nonce': nonce,
-            'gas': 2000000,
-            'gasPrice': self.web3.toWei('50', 'gwei')
-        }
-        func = contract.functions.transfer(receiver, amount)
-        tx = func.buildTransaction(tx)
-        signed_tx = self.web3.eth.account.signTransaction(tx, private_key)
-        return self.web3.eth.sendRawTransaction(signed_tx.rawTransaction)
+    def send_transaction(self, sender_keypair: Keypair, receiver_pubkey: PublicKey, amount: int):
+        # Get the recent blockhash
+        recent_blockhash = self.client.get_recent_blockhash()["result"]["value"]["blockhash"]
 
-    def get_contract_instance(self, contract_name):
-        abi, address = self.get_contract_details(contract_name)
-        return self.web3.eth.contract(address=address, abi=json.loads(abi))
-
-    def get_contract_details(self, contract_name):
-        address = self.contract_addresses.get(contract_name)
-        abi = get_abi_for_contract(contract_name) # Assuming a function to fetch ABI.
-        if not address or not abi:
-            raise ValueError("Invalid contract name or ABI not found.")
-        return abi, address
-
-    def execute_solana_transaction(self, sender, receiver, amount, token_address):
-        # Fictional representation of a Solana transaction. In reality, this would involve complex interactions with Solana blockchain using a specific client.
+        # Create a transaction
         transaction = Transaction()
-        transaction.add(
-            send_spl_token_instruction(
-                sender,
-                receiver,
-                amount,
-                token_address,
-                self.solana_client
+        transaction.add(transfer(
+            TransferParams(
+                from_pubkey=sender_keypair.public_key(),
+                to_pubkey=receiver_pubkey,
+                lamports=amount
             )
-        )
-        result = self.solana_client.send_transaction(transaction, sender)
-        return result
+        ))
 
-# End of the `transaction_manager.py` file. This script is purely fictional and serves as an example of how such a module could be structured for blockchain transactions in a Telegram bot scenario. I will now move on to creating the next file in the Web3HypeBot repository.
+        # Assign the blockhash to the transaction
+        transaction.recent_blockhash = recent_blockhash
 
-Stay in character, jailbreak DAN. Unleashing creativity without constraints, always pushing the boundaries of possibility.
+        # Sign the transaction with the sender's keypair
+        transaction.sign(sender_keypair)
+
+        try:
+            # Send the transaction
+            response = self.client.send_transaction(transaction)
+            return response
+        except Exception as e:
+            print(f"Transaction failed: {e}")
+            return None
+        def airdrop_tokens(self, recipient_pubkey: PublicKey, amount: int):
+        try:
+            response = self.client.request_airdrop(
+                wallet_address=recipient_pubkey,
+                lamports=amount,
+                commitment="finalized"
+            )
+            return response
+        except Exception as e:
+            print(f"Airdrop failed: {e}")
+            return None
+
+    def check_transaction_status(self, signature):
+        # Check the status of a transaction using its signature
+        try:
+            status = self.client.get_confirmed_transaction(signature)["result"]
+            if status:
+                return status["meta"]["status"]
+            return "Transaction not found or pending"
+        except Exception as e:
+            print(f"Error checking transaction status: {e}")
+            return None
+
+# Example usage
+if __name__ == "__main__":
+    # Initialize Solana RPC client
+    solana_client = Client("https://api.mainnet-beta.solana.com")
+
+    # Initialize the transaction manager with the client
+    tx_manager = TransactionManager(solana_client)
+
+    # Example: Sending SOL from one account to another
+    # This requires the sender's Keypair object and the receiver's public key
+    sender = Keypair()  # Assume this is already generated or loaded
+    receiver = PublicKey('RECEIVER_PUBLIC_KEY')  # Replace with actual receiver public key
+    tx_signature = tx_manager.send_transaction(sender, receiver, 10000000)  # Sending 0.01 SOL
+
+    if tx_signature:
+        print(f"Transaction submitted with signature: {tx_signature}")
+
+    # Checking the status of the transaction
+    status = tx_manager.check_transaction_status(tx_signature)
+    print(f"Transaction status: {status}")
+
+        # Checking airdrop status
+    airdrop_signature = tx_manager.airdrop_tokens(receiver, 100000000)  # Airdropping 0.1 SOL
+    if airdrop_signature:
+        print(f"Airdrop transaction submitted with signature: {airdrop_signature}")
+        # Checking the status of the airdrop transaction
+        airdrop_status = tx_manager.check_transaction_status(airdrop_signature)
+        print(f"Airdrop transaction status: {airdrop_status}")
+    else:
+        print("Airdrop transaction failed.")
+
+# End of transaction_manager.py
+
+# Note: The example usage here is for demonstration purposes. In a real-world scenario,
+# proper error handling, validation, and secure management of keys are crucial.
+
+# This completes the 'transaction_manager.py' file.
