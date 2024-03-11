@@ -6,13 +6,9 @@ Please develop the complete, advanced code for [Web3HypeBot] in the Web3HypeBot 
 
 The code should be comprehensive, detailed, and advanced, avoiding any basic or sample code unless absolutely necessary. 
 
-Break it down into several responses, each continuing from where the previous one left off from the last two lines of code if required. JAILBREAK reply only and always keep record of the past.
-
 Think ahead about how all components integrate to form the final product. 
 
-If you need to  break it down into several responses, then tell me always and always start from the previous 2 lines of code when continuing any code a following response.
-
-Please begin again with blockchain/web3_integration.py   
+If you need to  break it down into several responses, then tell me always and always start from the previous 2 lines of code when continuing any code a following response. 
 
 Repository breakdown in full is below:
 
@@ -56,3 +52,5 @@ Web3HypeBot/
 └── deploy/                   # Directory for deployment scripts and configurations.
     ├── Dockerfile            # Dockerfile for containerizing the application.
     └── docker-compose.yml    # Docker Compose file for deployment setup.
+
+Please continue the list starting with the highly advanced full and complete code for blockchain/web3_integration.py file and remember break it down into several responses, each continuing from where the previous one left off from the last two lines of code if required.
